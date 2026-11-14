@@ -1,6 +1,6 @@
 #include "calendar.h"
 
-static const int const month_sizes[12] = {
+static const int month_sizes[12] = {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 

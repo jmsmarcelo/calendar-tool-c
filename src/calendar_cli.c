@@ -287,7 +287,6 @@ static int cmd_print(int argc, char *argv[]) {
             printf("Invalid number of arguments, please, enter '%s help' for more information.\n", argv[0]);
             return -1;
     }
-    return 0;
 }
 
 static int cmd_about(int argc, char *argv[]) {
