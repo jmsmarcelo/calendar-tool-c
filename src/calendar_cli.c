@@ -289,6 +289,24 @@ static int cmd_print(int argc, char *argv[]) {
     return 0;
 }
 
+static int cmd_about(int argc, char *argv[]) {
+    if(argc > 2) {
+        printf("It is not need arguments, please, enter '%s help' for more information.\n", argv[0]);
+        return -1;
+    }
+    
+    printf(
+        "+-----------------------------------------------+\n"
+        "|                 Calendar Tool                 |\n"
+        "| A command-line calendar utility written in C. |\n"
+        "|                                               |\n"
+        "|                  Source code                  |\n"
+        "| https://github.com/jmsmarcelo/calendar-tool-c |\n"
+        "+-----------------------------------------------+\n"
+    );
+    return 0;
+}
+
 static int cmd_help(int argc, char *argv[]) {
     return 0;
 }
@@ -297,6 +315,7 @@ static const cmd_entry_t cmd_table[] = {
     {"days", cmd_days},
     {"weekday", cmd_weekday},
     {"print", cmd_print},
+    {"about", cmd_about},
     {"help", cmd_help}
 };
 
