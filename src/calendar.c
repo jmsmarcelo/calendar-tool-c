@@ -4,6 +4,13 @@ static const int const month_sizes[12] = {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
+static const char *const month_names[12] = {
+    "january", "february", "march",
+    "april", "may", "june",
+    "july", "august", "september",
+    "october", "november", "december"
+};
+
 static const char *const weekday_names[7] = {
     "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"
 };
@@ -51,4 +58,8 @@ int weekday_of_date(int year, int month, int day) {
 
 const char *get_weekday(int year, int month, int day) {
     return weekday_names[weekday_of_date(year, month, day)];
+}
+
+const char *get_month(int month) {
+    return month_names[month];
 }

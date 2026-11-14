@@ -5,6 +5,9 @@
 
 #define CMD_TABLE_COUNT (sizeof(cmd_table) / sizeof(cmd_table[0]))
 
+// Number of columns for yearly calendar (must divide 12)
+#define PRINT_COLUMNS 6
+
 typedef int (*cmd_f)(int argc, char *argv[]);
 
 typedef struct cmd_entry_type {
@@ -31,6 +34,19 @@ static int parse_ndigits(const char *str, size_t len) {
         if(c > 9) return -1;
         value *= 10;
         value += c;
+    }
+    return value;
+}
+
+static int parse_digits(const char *str, int max) {
+    int value = 0;
+    while(*str) {
+        unsigned char c = *str - '0';
+        if(c > 9) return -1;
+        value *= 10;
+        value += c;
+        if(value > max) return -1;
+        str++;
     }
     return value;
 }
@@ -96,6 +112,99 @@ static const char *get_ordinal(int n) {
     }
 }
 
+static void print_repeated(int count, const char *str, const char *prefix, const char *suffix) {
+    printf("%s", prefix);
+    while(count-- > 0) printf("%s", str);
+    printf("%s", suffix);
+}
+
+static int print_month(const date_t *date) {
+    int first_weekday = weekday_of_date(date->year, date->month, 1);
+    int days_month = days_in_month(date->year, date->month);
+    char title[32];
+    int title_len = 28;
+    title_len -= snprintf(title, sizeof(title), "%s %d", get_month(date->month), date->year);
+    int padding = title_len / 2;
+
+    print_repeated(28, "-", "+", "+\n");
+    printf("|%*s%s%*s|\n", padding, "", title, title_len - padding, "");
+    printf("| su  mo  tu  we  th  fr  sa |\n");
+
+    int day = 1;
+    while(day <= days_month) {
+        putchar('|');
+        for(int j = 0; j < 7; j++) {
+            printf(
+                " %2.d ", ((day > 1 || j >= first_weekday) && day <= days_month) ? day++ : 0
+            );
+        }
+        printf("|\n");
+    }
+    print_repeated(28, "-", "+", "+\n");
+    return 0;
+}
+
+static int print_year(int year, int columns) {
+    int first_weekday[PRINT_COLUMNS];
+    int month_lengths[PRINT_COLUMNS];
+    int day[PRINT_COLUMNS];
+    int month = 0;
+    int base_weekday = weekday_of_date(year, 0, 1);
+
+    char title[32];
+    int title_len = 29 * columns - 1;
+
+    print_repeated(title_len, "-", "+", "+\n|");
+
+    title_len -= snprintf(title, sizeof(title), "%d", year);
+    int padding = title_len / 2;
+
+    printf("%*s%s%*s|\n", padding, "", title, title_len - padding, "");
+    print_repeated(columns, "----------------------------+", "+", "\n");
+
+    int rows = 12 / columns;
+    for(int i = 0; i < rows; i++) {
+        putchar('|');
+        for(int j = 0; j < columns; j++) {
+            title_len = 28;
+            title_len -= snprintf(title, sizeof(title), "%s", get_month(month + j));
+            padding = title_len / 2;
+            printf("%*s%s%*s|", padding, "", title, title_len - padding, "");
+
+            day[j] = 1;
+            first_weekday[j] = base_weekday;
+            month_lengths[j] = days_in_month(year, month + j);
+            base_weekday = (base_weekday + month_lengths[j]) % 7;
+        }
+        print_repeated(columns, " su  mo  tu  we  th  fr  sa |", "\n|", "\n");
+
+        int stop = 0;
+        int finished[PRINT_COLUMNS] = {0};
+        while(stop < columns) {
+            putchar('|');
+            for(int j = 0; j < columns; j++) {
+                for(int k = 0; k < 7; k++) {
+                    printf(
+                        " %2.d ",
+                        ((day[j] > 1 || k >= first_weekday[j]) && day[j] <= month_lengths[j]) ? day[j]++ : 0
+                    );
+                }
+                putchar('|');
+
+                if(!finished[j] && day[j] > month_lengths[j]) {
+                    finished[j] = 1;
+                    stop++;
+                }
+            }
+            putchar('\n');
+        }
+        print_repeated(columns, "----------------------------+", "+", "\n");
+
+        month += columns;
+    }
+    return 0;
+}
+
 static int cmd_days(int argc, char *argv[]) {
     switch(argc - 3) {
         case 0:
@@ -143,6 +252,40 @@ static int cmd_weekday(int argc, char *argv[]) {
 }
 
 static int cmd_print(int argc, char *argv[]) {
+    int columns = 0;
+    date_t date;
+    switch(argc - 3) {
+        case 1:
+            columns = parse_digits(argv[3], PRINT_COLUMNS);
+            if(columns < 1 || 12 % columns != 0) {
+                printf("Invalid number of columns, please, enter '%s help' for more information.\n", argv[0]);
+                return -1;
+            }
+        case 0:
+            switch(date_parse(&date, argv[2])) {
+                case 2:
+                    if(!is_valid_date(date.year, date.month, 1)) {
+                        printf("Invalid date, please, enter '%s help' for more information.\n", argv[0]);
+                        return -1;
+                    }
+                    if(columns > 0) {
+                        printf("It is not need number of columns, please, enter '%s help' for more information.\n", argv[0]);
+                        return -1;
+                    }
+                    return print_month(&date);
+                case 1:
+                    if(date.year > 0) {
+                        return print_year(date.year, columns > 0 ? columns : PRINT_COLUMNS);
+                    }
+                case 0:
+                default:
+                    printf("Invalid date, please, enter '%s help' for more information.\n", argv[0]);
+                    return -1;
+            }
+        default:
+            printf("Invalid number of arguments, please, enter '%s help' for more information.\n", argv[0]);
+            return -1;
+    }
     return 0;
 }
 
