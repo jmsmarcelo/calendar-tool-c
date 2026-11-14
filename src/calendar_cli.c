@@ -6,7 +6,8 @@
 #define CMD_TABLE_COUNT (sizeof(cmd_table) / sizeof(cmd_table[0]))
 
 // Number of columns for yearly calendar (must divide 12)
-#define PRINT_COLUMNS 6
+#define PRINT_MAX_COLUMNS 6
+#define PRINT_DEFAULT_COLUMNS 3
 
 typedef int (*cmd_f)(int argc, char *argv[]);
 
@@ -145,9 +146,9 @@ static int print_month(const date_t *date) {
 }
 
 static int print_year(int year, int columns) {
-    int first_weekday[PRINT_COLUMNS];
-    int month_lengths[PRINT_COLUMNS];
-    int day[PRINT_COLUMNS];
+    int first_weekday[PRINT_MAX_COLUMNS];
+    int month_lengths[PRINT_MAX_COLUMNS];
+    int day[PRINT_MAX_COLUMNS];
     int month = 0;
     int base_weekday = weekday_of_date(year, 0, 1);
 
@@ -179,7 +180,7 @@ static int print_year(int year, int columns) {
         print_repeated(columns, " su  mo  tu  we  th  fr  sa |", "\n|", "\n");
 
         int stop = 0;
-        int finished[PRINT_COLUMNS] = {0};
+        int finished[PRINT_MAX_COLUMNS] = {0};
         while(stop < columns) {
             putchar('|');
             for(int j = 0; j < columns; j++) {
@@ -256,7 +257,7 @@ static int cmd_print(int argc, char *argv[]) {
     date_t date;
     switch(argc - 3) {
         case 1:
-            columns = parse_digits(argv[3], PRINT_COLUMNS);
+            columns = parse_digits(argv[3], PRINT_MAX_COLUMNS);
             if(columns < 1 || 12 % columns != 0) {
                 printf("Invalid number of columns, please, enter '%s help' for more information.\n", argv[0]);
                 return -1;
@@ -275,7 +276,7 @@ static int cmd_print(int argc, char *argv[]) {
                     return print_month(&date);
                 case 1:
                     if(date.year > 0) {
-                        return print_year(date.year, columns > 0 ? columns : PRINT_COLUMNS);
+                        return print_year(date.year, columns > 0 ? columns : PRINT_DEFAULT_COLUMNS);
                     }
                 case 0:
                 default:
@@ -294,7 +295,7 @@ static int cmd_about(int argc, char *argv[]) {
         printf("It is not need arguments, please, enter '%s help' for more information.\n", argv[0]);
         return -1;
     }
-    
+
     printf(
         "+-----------------------------------------------+\n"
         "|                 Calendar Tool                 |\n"
@@ -308,6 +309,39 @@ static int cmd_about(int argc, char *argv[]) {
 }
 
 static int cmd_help(int argc, char *argv[]) {
+    if(argc > 2) {
+        printf("It is not need arguments, please, enter '%s help' for more information.\n", argv[0]);
+        return -1;
+    }
+    printf(
+        "Usage: %s <command> [arguments]\n"
+        "\n"
+        "Commands:\n"
+        "   days YYYY-MM-DD             Calculate the ordinal day of the year.\n"
+        "   days YYYY-MM-DD YYYY-MM-DD  Calculate the number of days between two dates.\n"
+        "   weekday YYYY-MM-DD          Get the weekday name of a given date.\n"
+        "   print YYYY-MM               Print a monthly calendar.\n"
+        "   print YYYY [columns]        Print a yearly calendar (1-%d columns (must divide 12), default: %d).\n"
+        "   about                       Display information about this program.\n"
+        "   help                        Display this help message.\n"
+        "\n"
+        "Examples:\n"
+        "   %s days 2026-11-14\n"
+        "   %s days 2026-11-14 2026-12-25\n"
+        "   %s weekday 2026-11-14\n"
+        "   %s print 2026-11\n"
+        "   %s print 2026\n"
+        "   %s print 2026 6\n",
+        argv[0],
+        PRINT_MAX_COLUMNS,
+        PRINT_DEFAULT_COLUMNS,
+        argv[0],
+        argv[0],
+        argv[0],
+        argv[0],
+        argv[0],
+        argv[0]
+    );
     return 0;
 }
 
