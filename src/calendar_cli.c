@@ -128,6 +128,17 @@ static int cmd_days(int argc, char *argv[]) {
 }
 
 static int cmd_weekday(int argc, char *argv[]) {
+    if(argc != 3) {
+        printf("Invalid number of arguments, please, enter '%s help' for more information.\n", argv[0]);
+        return -1;
+    }
+    date_t date;
+    if(date_parse(&date, argv[2]) != 3
+            || !is_valid_date(date.year, date.month, date.day)) {
+        printf("Invalid or incomplete date, please, enter '%s help' for more information.\n", argv[0]);
+        return -1;
+    }
+    printf("%s\n", get_weekday(date.year, date.month, date.day));
     return 0;
 }
 

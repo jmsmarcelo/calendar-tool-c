@@ -4,6 +4,10 @@ static const int const month_sizes[12] = {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
+static const char *const weekday_names[7] = {
+    "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"
+};
+
 static int is_leap_year(int year) {
     return (
         year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)
@@ -39,4 +43,12 @@ int is_valid_date(int year, int month, int day) {
         || year < 1
         || day < 1 || day > days_in_month(year, month)
     );
+}
+
+int weekday_of_date(int year, int month, int day) {
+    return days_at_date(year, month, day) % 7;
+}
+
+const char *get_weekday(int year, int month, int day) {
+    return weekday_names[weekday_of_date(year, month, day)];
 }
